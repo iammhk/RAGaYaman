@@ -135,6 +135,22 @@ pip install lightrag-hku
 
 ## 快速开始
 
+### LightRAG的LLM及配套技术栈要求
+
+LightRAG对大型语言模型（LLM）的能力要求远高于传统RAG，因为它需要LLM执行文档中的实体关系抽取任务。配置合适的Embedding和Reranker模型对提高查询表现也至关重要。
+
+- **LLM选型**：
+  - 推荐选用参数量至少为32B的LLM。
+  - 上下文长度至少为32KB，推荐达到64KB。
+- **Embedding模型**：
+  - 高性能的Embedding模型对RAG至关重要。
+  - 推荐使用主流的多语言Embedding模型，例如：BAAI/bge-m3 和 text-embedding-3-large。
+  - **重要提示**：在文档索引前必须确定使用的Embedding模型，且在文档查询阶段必须沿用与索引阶段相同的模型。
+- **Reranker模型配置**：
+  - 配置Reranker模型能够显著提升LightRAG的检索效果。
+  - 启用Reranker模型后，推荐将“mix模式”设为默认查询模式。
+  - 推荐选用主流的Reranker模型，例如：BAAI/bge-reranker-v2-m3 或 Jina 等服务商提供的模型。
+
 ### 使用LightRAG服务器
 
 **有关LightRAG服务器的更多信息，请参阅[LightRAG服务器](./lightrag/api/README.md)。**
@@ -242,7 +258,6 @@ if __name__ == "__main__":
 | **tokenizer** | `Tokenizer` | 用于将文本转换为 tokens（数字）以及使用遵循 TokenizerInterface 协议的 .encode() 和 .decode() 函数将 tokens 转换回文本的函数。 如果您不指定，它将使用默认的 Tiktoken tokenizer。 | `TiktokenTokenizer` |
 | **tiktoken_model_name** | `str` | 如果您使用的是默认的 Tiktoken tokenizer，那么这是要使用的特定 Tiktoken 模型的名称。如果您提供自己的 tokenizer，则忽略此设置。 | `gpt-4o-mini` |
 | **entity_extract_max_gleaning** | `int` | 实体提取过程中的循环次数，附加历史消息 | `1` |
-| **entity_summary_to_max_tokens** | `int` | 每个实体摘要的最大令牌大小 | `500` |
 | **node_embedding_algorithm** | `str` | 节点嵌入算法（当前未使用） | `node2vec` |
 | **node2vec_params** | `dict` | 节点嵌入的参数 | `{"dimensions": 1536,"num_walks": 10,"walk_length": 40,"window_size": 2,"iterations": 3,"random_seed": 3,}` |
 | **embedding_func** | `EmbeddingFunc` | 从文本生成嵌入向量的函数 | `openai_embed` |
@@ -250,7 +265,7 @@ if __name__ == "__main__":
 | **embedding_func_max_async** | `int` | 最大并发异步嵌入进程数 | `16` |
 | **llm_model_func** | `callable` | LLM生成的函数 | `gpt_4o_mini_complete` |
 | **llm_model_name** | `str` | 用于生成的LLM模型名称 | `meta-llama/Llama-3.2-1B-Instruct` |
-| **llm_model_max_token_size** | `int` | LLM生成的最大令牌大小（影响实体关系摘要） | `32768`（默认值由环境变量MAX_TOKENS更改） |
+| **llm_model_max_token_size** | `int` | 生成实体关系摘要时送给LLM的最大令牌数 | `32000`（默认值由环境变量MAX_TOKENS更改） |
 | **llm_model_max_async** | `int` | 最大并发异步LLM进程数 | `4`（默认值由环境变量MAX_ASYNC更改） |
 | **llm_model_kwargs** | `dict` | LLM生成的附加参数 | |
 | **vector_db_storage_cls_kwargs** | `dict` | 向量数据库的附加参数，如设置节点和关系检索的阈值 | cosine_better_than_threshold: 0.2（默认值由环境变量COSINE_THRESHOLD更改） |
@@ -294,26 +309,19 @@ class QueryParam:
     top_k: int = int(os.getenv("TOP_K", "60"))
     """Number of top items to retrieve. Represents entities in 'local' mode and relationships in 'global' mode."""
 
-    chunk_top_k: int = int(os.getenv("CHUNK_TOP_K", "5"))
-    """Number of text chunks to retrieve initially from vector search.
+    chunk_top_k: int = int(os.getenv("CHUNK_TOP_K", "10"))
+    """Number of text chunks to retrieve initially from vector search and keep after reranking.
     If None, defaults to top_k value.
     """
 
-    chunk_rerank_top_k: int = int(os.getenv("CHUNK_RERANK_TOP_K", "5"))
-    """Number of text chunks to keep after reranking.
-    If None, keeps all chunks returned from initial retrieval.
-    """
+    max_entity_tokens: int = int(os.getenv("MAX_ENTITY_TOKENS", "10000"))
+    """Maximum number of tokens allocated for entity context in unified token control system."""
 
-    max_token_for_text_unit: int = int(os.getenv("MAX_TOKEN_TEXT_CHUNK", "4000"))
-    """Maximum number of tokens allowed for each retrieved text chunk."""
+    max_relation_tokens: int = int(os.getenv("MAX_RELATION_TOKENS", "10000"))
+    """Maximum number of tokens allocated for relationship context in unified token control system."""
 
-    max_token_for_global_context: int = int(
-        os.getenv("MAX_TOKEN_RELATION_DESC", "4000")
-    )
-    """Maximum number of tokens allocated for relationship descriptions in global retrieval."""
-
-    max_token_for_local_context: int = int(os.getenv("MAX_TOKEN_ENTITY_DESC", "4000"))
-    """Maximum number of tokens allocated for entity descriptions in local retrieval."""
+    max_total_tokens: int = int(os.getenv("MAX_TOTAL_TOKENS", "32000"))
+    """Maximum total tokens budget for the entire query context (entities + relations + chunks + system prompt)."""
 
     hl_keywords: list[str] = field(default_factory=list)
     """List of high-level keywords to prioritize in retrieval."""
@@ -341,6 +349,11 @@ class QueryParam:
     user_prompt: str | None = None
     """User-provided prompt for the query.
     If proivded, this will be use instead of the default vaulue from prompt template.
+    """
+
+    enable_rerank: bool = True
+    """Enable reranking for retrieved text chunks. If True but no rerank model is configured, a warning will be issued.
+    Default is True to enable reranking when rerank model is available.
     """
 ```
 
@@ -869,7 +882,7 @@ rag = LightRAG(
 
 * **对于Neo4j图数据库，通过label来实现数据的逻辑隔离**：Neo4JStorage
 
-为了保持对遗留数据的兼容，在未配置工作空间时PostgreSQL的默认工作空间为`default`，Neo4j的默认工作空间为`base`。对于所有的外部存储，系统都提供了专用的工作空间环境变量，用于覆盖公共的 `WORKSPACE`环境变量配置。这些适用于指定存储类型的工作空间环境变量为：`REDIS_WORKSPACE`, `MILVUS_WORKSPACE`, `QDRANT_WORKSPACE`, `MONGODB_WORKSPACE`, `POSTGRES_WORKSPACE`, `NEO4J_WORKSPACE`。
+为了保持对遗留数据的兼容，在未配置工作空间时PostgreSQL非图存储的工作空间为`default`，PostgreSQL AGE图存储的工作空间为空，Neo4j图存储的默认工作空间为`base`。对于所有的外部存储，系统都提供了专用的工作空间环境变量，用于覆盖公共的 `WORKSPACE`环境变量配置。这些适用于指定存储类型的工作空间环境变量为：`REDIS_WORKSPACE`, `MILVUS_WORKSPACE`, `QDRANT_WORKSPACE`, `MONGODB_WORKSPACE`, `POSTGRES_WORKSPACE`, `NEO4J_WORKSPACE`。
 
 ## 编辑实体和关系
 

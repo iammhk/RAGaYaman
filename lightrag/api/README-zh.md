@@ -54,8 +54,8 @@ LLM_BINDING=openai
 LLM_MODEL=gpt-4o
 LLM_BINDING_HOST=https://api.openai.com/v1
 LLM_BINDING_API_KEY=your_api_key
-### 发送给 LLM 的最大 token 数（小于模型上下文大小）
-MAX_TOKENS=32768
+### 发送给 LLM 进行实体关系摘要的最大 token 数（小于模型上下文大小）
+MAX_TOKENS=32000
 
 EMBEDDING_BINDING=ollama
 EMBEDDING_BINDING_HOST=http://localhost:11434
@@ -71,8 +71,10 @@ LLM_BINDING=ollama
 LLM_MODEL=mistral-nemo:latest
 LLM_BINDING_HOST=http://localhost:11434
 # LLM_BINDING_API_KEY=your_api_key
-### 发送给 LLM 的最大 token 数（基于您的 Ollama 服务器容量）
-MAX_TOKENS=8192
+### 发送给 LLM 进行实体关系摘要的最大 token 数（小于模型上下文大小）
+MAX_TOKENS=7500
+###  Ollama 服务器上下文 token 数（基于您的 Ollama 服务器容量）
+OLLAMA_NUM_CTX=8192
 
 EMBEDDING_BINDING=ollama
 EMBEDDING_BINDING_HOST=http://localhost:11434
@@ -166,6 +168,8 @@ lightrag-server --port 9622 --workspace space2
 ```
 
 工作空间的作用是实现不同实例之间的数据隔离。因此不同实例之间的`workspace`参数必须不同，否则会导致数据混乱，数据将会被破坏。
+
+通过 Docker Compose 启动多个 LightRAG 实例时，只需在 `docker-compose.yml` 中为每个容器指定不同的 `WORKSPACE` 和 `PORT` 环境变量即可。即使所有实例共享同一个 `.env` 文件，Compose 中定义的容器环境变量也会优先覆盖 `.env` 文件中的同名设置，从而确保每个实例拥有独立的配置。
 
 ### LightRAG实例间的数据隔离
 

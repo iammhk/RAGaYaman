@@ -11,6 +11,14 @@ from lightrag.utils import get_env_value
 from lightrag.constants import (
     DEFAULT_WOKERS,
     DEFAULT_TIMEOUT,
+    DEFAULT_TOP_K,
+    DEFAULT_CHUNK_TOP_K,
+    DEFAULT_HISTORY_TURNS,
+    DEFAULT_MAX_ENTITY_TOKENS,
+    DEFAULT_MAX_RELATION_TOKENS,
+    DEFAULT_MAX_TOTAL_TOKENS,
+    DEFAULT_COSINE_THRESHOLD,
+    DEFAULT_RELATED_CHUNK_NUMBER,
 )
 
 # use the .env that is inside the current folder
@@ -108,7 +116,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-tokens",
         type=int,
-        default=get_env_value("MAX_TOKENS", 32768, int),
+        default=get_env_value("MAX_TOKENS", 32000, int),
         help="Maximum token size (default: from env or 32768)",
     )
 
@@ -149,45 +157,6 @@ def parse_args() -> argparse.Namespace:
         "--ssl-keyfile",
         default=get_env_value("SSL_KEYFILE", None),
         help="Path to SSL private key file (required if --ssl is enabled)",
-    )
-
-    parser.add_argument(
-        "--history-turns",
-        type=int,
-        default=get_env_value("HISTORY_TURNS", 3, int),
-        help="Number of conversation history turns to include (default: from env or 3)",
-    )
-
-    # Search parameters
-    parser.add_argument(
-        "--top-k",
-        type=int,
-        default=get_env_value("TOP_K", 60, int),
-        help="Number of most similar results to return (default: from env or 60)",
-    )
-    parser.add_argument(
-        "--chunk-top-k",
-        type=int,
-        default=get_env_value("CHUNK_TOP_K", 15, int),
-        help="Number of text chunks to retrieve initially from vector search (default: from env or 15)",
-    )
-    parser.add_argument(
-        "--chunk-rerank-top-k",
-        type=int,
-        default=get_env_value("CHUNK_RERANK_TOP_K", 5, int),
-        help="Number of text chunks to keep after reranking (default: from env or 5)",
-    )
-    parser.add_argument(
-        "--enable-rerank",
-        action="store_true",
-        default=get_env_value("ENABLE_RERANK", False, bool),
-        help="Enable rerank functionality (default: from env or False)",
-    )
-    parser.add_argument(
-        "--cosine-threshold",
-        type=float,
-        default=get_env_value("COSINE_THRESHOLD", 0.2, float),
-        help="Cosine similarity threshold (default: from env or 0.4)",
     )
 
     # Ollama model name
@@ -270,6 +239,9 @@ def parse_args() -> argparse.Namespace:
         args.llm_binding = "openai"
         args.embedding_binding = "ollama"
 
+    # Ollama ctx_num
+    args.ollama_num_ctx = get_env_value("OLLAMA_NUM_CTX", 32768, int)
+
     args.llm_binding_host = get_env_value(
         "LLM_BINDING_HOST", get_default_host(args.llm_binding)
     )
@@ -317,6 +289,26 @@ def parse_args() -> argparse.Namespace:
     args.rerank_model = get_env_value("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
     args.rerank_binding_host = get_env_value("RERANK_BINDING_HOST", None)
     args.rerank_binding_api_key = get_env_value("RERANK_BINDING_API_KEY", None)
+
+    # Query configuration
+    args.history_turns = get_env_value("HISTORY_TURNS", DEFAULT_HISTORY_TURNS, int)
+    args.top_k = get_env_value("TOP_K", DEFAULT_TOP_K, int)
+    args.chunk_top_k = get_env_value("CHUNK_TOP_K", DEFAULT_CHUNK_TOP_K, int)
+    args.max_entity_tokens = get_env_value(
+        "MAX_ENTITY_TOKENS", DEFAULT_MAX_ENTITY_TOKENS, int
+    )
+    args.max_relation_tokens = get_env_value(
+        "MAX_RELATION_TOKENS", DEFAULT_MAX_RELATION_TOKENS, int
+    )
+    args.max_total_tokens = get_env_value(
+        "MAX_TOTAL_TOKENS", DEFAULT_MAX_TOTAL_TOKENS, int
+    )
+    args.cosine_threshold = get_env_value(
+        "COSINE_THRESHOLD", DEFAULT_COSINE_THRESHOLD, float
+    )
+    args.related_chunk_number = get_env_value(
+        "RELATED_CHUNK_NUMBER", DEFAULT_RELATED_CHUNK_NUMBER, int
+    )
 
     ollama_server_infos.LIGHTRAG_MODEL = args.simulated_model_name
 

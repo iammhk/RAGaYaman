@@ -134,6 +134,22 @@ pip install lightrag-hku
 
 ## Quick Start
 
+### LLM and Technology Stack Requirements for LightRAG
+
+LightRAG's demands on the capabilities of Large Language Models (LLMs) are significantly higher than those of traditional RAG, as it requires the LLM to perform entity-relationship extraction tasks from documents. Configuring appropriate Embedding and Reranker models is also crucial for improving query performance.
+
+- **LLM Selection**:
+  - It is recommended to use an LLM with at least 32 billion parameters.
+  - The context length should be at least 32KB, with 64KB being recommended.
+- **Embedding Model**:
+  - A high-performance Embedding model is essential for RAG.
+  - We recommend using mainstream multilingual Embedding models, such as: `BAAI/bge-m3` and `text-embedding-3-large`.
+  - **Important Note**: The Embedding model must be determined before document indexing, and the same model must be used during the document query phase.
+- **Reranker Model Configuration**:
+  - Configuring a Reranker model can significantly enhance LightRAG's retrieval performance.
+  - When a Reranker model is enabled, it is recommended to set the "mix mode" as the default query mode.
+  - We recommend using mainstream Reranker models, such as: `BAAI/bge-reranker-v2-m3` or models provided by services like Jina.
+
 ### Quick Start for LightRAG Server
 
 * For more information about LightRAG Server, please refer to [LightRAG Server](./lightrag/api/README.md).
@@ -249,7 +265,6 @@ A full list of LightRAG init parameters:
 | **tokenizer** | `Tokenizer` | The function used to convert text into tokens (numbers) and back using .encode() and .decode() functions following `TokenizerInterface` protocol. If you don't specify one, it will use the default Tiktoken tokenizer. | `TiktokenTokenizer` |
 | **tiktoken_model_name** | `str` | If you're using the default Tiktoken tokenizer, this is the name of the specific Tiktoken model to use. This setting is ignored if you provide your own tokenizer. | `gpt-4o-mini` |
 | **entity_extract_max_gleaning** | `int` | Number of loops in the entity extraction process, appending history messages | `1` |
-| **entity_summary_to_max_tokens** | `int` | Maximum token size for each entity summary | `500` |
 | **node_embedding_algorithm** | `str` | Algorithm for node embedding (currently not used) | `node2vec` |
 | **node2vec_params** | `dict` | Parameters for node embedding | `{"dimensions": 1536,"num_walks": 10,"walk_length": 40,"window_size": 2,"iterations": 3,"random_seed": 3,}` |
 | **embedding_func** | `EmbeddingFunc` | Function to generate embedding vectors from text | `openai_embed` |
@@ -257,7 +272,7 @@ A full list of LightRAG init parameters:
 | **embedding_func_max_async** | `int` | Maximum number of concurrent asynchronous embedding processes | `16` |
 | **llm_model_func** | `callable` | Function for LLM generation | `gpt_4o_mini_complete` |
 | **llm_model_name** | `str` | LLM model name for generation | `meta-llama/Llama-3.2-1B-Instruct` |
-| **llm_model_max_token_size** | `int` | Maximum token size for LLM generation (affects entity relation summaries) | `32768`（default value changed by env var MAX_TOKENS) |
+| **llm_model_max_token_size** | `int` | Maximum tokens send to LLM to generate entity relation summaries | `32000`（default value changed by env var MAX_TOKENS) |
 | **llm_model_max_async** | `int` | Maximum number of concurrent asynchronous LLM processes | `4`（default value changed by env var MAX_ASYNC) |
 | **llm_model_kwargs** | `dict` | Additional parameters for LLM generation | |
 | **vector_db_storage_cls_kwargs** | `dict` | Additional parameters for vector database, like setting the threshold for nodes and relations retrieval | cosine_better_than_threshold: 0.2（default value changed by env var COSINE_THRESHOLD) |
@@ -301,26 +316,19 @@ class QueryParam:
     top_k: int = int(os.getenv("TOP_K", "60"))
     """Number of top items to retrieve. Represents entities in 'local' mode and relationships in 'global' mode."""
 
-    chunk_top_k: int = int(os.getenv("CHUNK_TOP_K", "5"))
-    """Number of text chunks to retrieve initially from vector search.
+    chunk_top_k: int = int(os.getenv("CHUNK_TOP_K", "10"))
+    """Number of text chunks to retrieve initially from vector search and keep after reranking.
     If None, defaults to top_k value.
     """
 
-    chunk_rerank_top_k: int = int(os.getenv("CHUNK_RERANK_TOP_K", "5"))
-    """Number of text chunks to keep after reranking.
-    If None, keeps all chunks returned from initial retrieval.
-    """
+    max_entity_tokens: int = int(os.getenv("MAX_ENTITY_TOKENS", "10000"))
+    """Maximum number of tokens allocated for entity context in unified token control system."""
 
-    max_token_for_text_unit: int = int(os.getenv("MAX_TOKEN_TEXT_CHUNK", "4000"))
-    """Maximum number of tokens allowed for each retrieved text chunk."""
+    max_relation_tokens: int = int(os.getenv("MAX_RELATION_TOKENS", "10000"))
+    """Maximum number of tokens allocated for relationship context in unified token control system."""
 
-    max_token_for_global_context: int = int(
-        os.getenv("MAX_TOKEN_RELATION_DESC", "4000")
-    )
-    """Maximum number of tokens allocated for relationship descriptions in global retrieval."""
-
-    max_token_for_local_context: int = int(os.getenv("MAX_TOKEN_ENTITY_DESC", "4000"))
-    """Maximum number of tokens allocated for entity descriptions in local retrieval."""
+    max_total_tokens: int = int(os.getenv("MAX_TOTAL_TOKENS", "32000"))
+    """Maximum total tokens budget for the entire query context (entities + relations + chunks + system prompt)."""
 
     conversation_history: list[dict[str, str]] = field(default_factory=list)
     """Stores past conversation history to maintain context.
@@ -342,6 +350,11 @@ class QueryParam:
     user_prompt: str | None = None
     """User-provided prompt for the query.
     If proivded, this will be use instead of the default vaulue from prompt template.
+    """
+
+    enable_rerank: bool = True
+    """Enable reranking for retrieved text chunks. If True but no rerank model is configured, a warning will be issued.
+    Default is True to enable reranking when rerank model is available.
     """
 ```
 
@@ -915,7 +928,7 @@ The `workspace` parameter ensures data isolation between different LightRAG inst
 - **For relational databases, data isolation is achieved by adding a `workspace` field to the tables for logical data separation:** `PGKVStorage`, `PGVectorStorage`, `PGDocStatusStorage`.
 - **For the Neo4j graph database, logical data isolation is achieved through labels:** `Neo4JStorage`
 
-To maintain compatibility with legacy data, the default workspace for PostgreSQL is `default` and for Neo4j is `base` when no workspace is configured. For all external storages, the system provides dedicated workspace environment variables to override the common `WORKSPACE` environment variable configuration. These storage-specific workspace environment variables are: `REDIS_WORKSPACE`, `MILVUS_WORKSPACE`, `QDRANT_WORKSPACE`, `MONGODB_WORKSPACE`, `POSTGRES_WORKSPACE`, `NEO4J_WORKSPACE`.
+To maintain compatibility with legacy data, the default workspace for PostgreSQL non-graph storage is `default` and, for PostgreSQL AGE graph storage is null, for Neo4j graph storage is `base` when no workspace is configured. For all external storages, the system provides dedicated workspace environment variables to override the common `WORKSPACE` environment variable configuration. These storage-specific workspace environment variables are: `REDIS_WORKSPACE`, `MILVUS_WORKSPACE`, `QDRANT_WORKSPACE`, `MONGODB_WORKSPACE`, `POSTGRES_WORKSPACE`, `NEO4J_WORKSPACE`.
 
 ## Edit Entities and Relations
 
