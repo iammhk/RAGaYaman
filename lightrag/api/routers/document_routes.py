@@ -369,7 +369,7 @@ class DocStatusResponse(BaseModel):
     metadata: Optional[dict[str, Any]] = Field(
         default=None, description="Additional metadata about the document"
     )
-    file_path: str = Field(description="Path to the document file")
+    file_path: str = Field(description="Path to the document file", default="")
 
     class Config:
         json_schema_extra = {
@@ -1476,7 +1476,7 @@ def create_document_routes(
                             chunks_count=doc_status.chunks_count,
                             error=doc_status.error,
                             metadata=doc_status.metadata,
-                            file_path=doc_status.file_path,
+                            file_path=doc_status.file_path or doc_id,
                         )
                     )
             return response

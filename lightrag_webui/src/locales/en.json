@@ -165,6 +165,24 @@
       "errors": {
         "fetchFailed": "Failed to get pipeline status\n{{error}}"
       }
+    },
+    "addTextDocument": {
+      "button": "Add Document",
+      "tooltip": "Create a new text document",
+      "title": "Add Text Document",
+      "description": "Create a new document from text content that will be added to your knowledge base.",
+      "titleLabel": "Document Title",
+      "titlePlaceholder": "Enter a title for your document",
+      "contentLabel": "Document Content", 
+      "contentPlaceholder": "Enter the content of your document here...",
+      "add": "Add Document",
+      "adding": "Adding...",
+      "success": "Document '{{filename}}' added successfully",
+      "errors": {
+        "titleRequired": "Document title is required",
+        "contentRequired": "Document content is required",
+        "uploadFailed": "Failed to add document"
+      }
     }
   },
   "graphPanel": {

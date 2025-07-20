@@ -212,7 +212,7 @@ const axiosInstance = axios.create({
 // Interceptor: add api key and check authentication
 axiosInstance.interceptors.request.use((config) => {
   const apiKey = useSettingsStore.getState().apiKey
-  const token = localStorage.getItem('LIGHTRAG-API-TOKEN');
+  const token = localStorage.getItem('RAG-YAMAN-API-TOKEN');
 
   // Always include token if it exists, regardless of path
   if (token) {
@@ -305,7 +305,7 @@ export const queryTextStream = async (
   onError?: (error: string) => void
 ) => {
   const apiKey = useSettingsStore.getState().apiKey;
-  const token = localStorage.getItem('LIGHTRAG-API-TOKEN');
+  const token = localStorage.getItem('RAG-YAMAN-API-TOKEN');
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'Accept': 'application/x-ndjson',
@@ -484,8 +484,11 @@ export const queryTextStream = async (
   }
 };
 
-export const insertText = async (text: string): Promise<DocActionResponse> => {
-  const response = await axiosInstance.post('/documents/text', { text })
+export const insertText = async (text: string, fileSource?: string): Promise<DocActionResponse> => {
+  const response = await axiosInstance.post('/documents/text', { 
+    text,
+    ...(fileSource && { file_source: fileSource })
+  })
   return response.data
 }
 

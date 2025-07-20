@@ -15,6 +15,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import EmptyCard from '@/components/ui/EmptyCard'
 import Checkbox from '@/components/ui/Checkbox'
 import UploadDocumentsDialog from '@/components/documents/UploadDocumentsDialog'
+import AddTextDocumentDialog from '@/components/documents/AddTextDocumentDialog'
 import ClearDocumentsDialog from '@/components/documents/ClearDocumentsDialog'
 import DeleteDocumentsDialog from '@/components/documents/DeleteDocumentsDialog'
 import DeselectDocumentsDialog from '@/components/documents/DeselectDocumentsDialog'
@@ -542,6 +543,7 @@ export default function DocumentManager() {
           ) : (
             <ClearDocumentsDialog onDocumentsCleared={fetchDocuments} />
           )}
+          <AddTextDocumentDialog onDocumentAdded={fetchDocuments} />
           <UploadDocumentsDialog onDocumentsUploaded={fetchDocuments} />
           <PipelineStatusDialog
             open={showPipelineStatus}
