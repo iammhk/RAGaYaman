@@ -1,6 +1,6 @@
-# LightRAG WebUI
+# RAG-Yaman WebUI
 
-LightRAG WebUI is a React-based web interface for interacting with the LightRAG system. It provides a user-friendly interface for querying, managing, and exploring LightRAG's functionalities.
+RAG-Yaman WebUI is a React-based web interface for interacting with the RAG-Yaman system. It provides a user-friendly interface for querying, managing, and exploring RAG-Yaman's functionalities.
 
 ## Installation
 
@@ -10,7 +10,7 @@ LightRAG WebUI is a React-based web interface for interacting with the LightRAG 
 
 2.  **Install Dependencies:**
 
-    In the `lightrag_webui` directory, run the following command to install project dependencies:
+    In the `ragyaman_webui` directory, run the following command to install project dependencies:
 
     ```bash
     bun install --frozen-lockfile

@@ -1,4 +1,4 @@
-# Complete Fix for LightRAG IndexError Issue
+# Complete Fix for RAG-Yaman IndexError Issue
 
 ## Problem Analysis
 The IndexError `index 24 is out of bounds for axis 0 with size 0` was occurring due to **data inconsistency** between different storage components:
@@ -8,7 +8,7 @@ The IndexError `index 24 is out of bounds for axis 0 with size 0` was occurring 
 3. **Vector Database**: Was empty/corrupted
 
 ## Root Cause
-When LightRAG processes documents, it maintains consistency across multiple storage systems:
+When RAG-Yaman processes documents, it maintains consistency across multiple storage systems:
 - **KV Storage**: Stores document metadata and chunks
 - **Graph Storage**: Stores entity relationships 
 - **Vector Database**: Stores embeddings for similarity search
@@ -30,10 +30,10 @@ The IndexError occurred because:
 Updated `.env` file with explicit storage settings:
 ```bash
 # Storage configuration
-LIGHTRAG_KV_STORAGE=JsonKVStorage
-LIGHTRAG_DOC_STATUS_STORAGE=JsonDocStatusStorage
-LIGHTRAG_GRAPH_STORAGE=NetworkXStorage
-LIGHTRAG_VECTOR_STORAGE=NanoVectorDBStorage
+RAG_YAMAN_KV_STORAGE=JsonKVStorage
+RAG_YAMAN_DOC_STATUS_STORAGE=JsonDocStatusStorage
+RAG_YAMAN_GRAPH_STORAGE=NetworkXStorage
+RAG_YAMAN_VECTOR_STORAGE=NanoVectorDBStorage
 
 # Required for NanoVectorDBStorage
 COSINE_THRESHOLD=0.2

@@ -139,11 +139,11 @@ const isGuestToken = (token: string): boolean => {
 };
 
 const initAuthState = (): { isAuthenticated: boolean; isGuestMode: boolean; coreVersion: string | null; apiVersion: string | null; username: string | null; webuiTitle: string | null; webuiDescription: string | null } => {
-  const token = localStorage.getItem('LIGHTRAG-API-TOKEN');
-  const coreVersion = localStorage.getItem('LIGHTRAG-CORE-VERSION');
-  const apiVersion = localStorage.getItem('LIGHTRAG-API-VERSION');
-  const webuiTitle = localStorage.getItem('LIGHTRAG-WEBUI-TITLE');
-  const webuiDescription = localStorage.getItem('LIGHTRAG-WEBUI-DESCRIPTION');
+  const token = localStorage.getItem('RAG-YAMAN-API-TOKEN');
+  const coreVersion = localStorage.getItem('RAG-YAMAN-CORE-VERSION');
+  const apiVersion = localStorage.getItem('RAG-YAMAN-API-VERSION');
+  const webuiTitle = localStorage.getItem('RAG-YAMAN-WEBUI-TITLE');
+  const webuiDescription = localStorage.getItem('RAG-YAMAN-WEBUI-DESCRIPTION');
   const username = token ? getUsernameFromToken(token) : null;
 
   if (!token) {
@@ -183,25 +183,25 @@ export const useAuthStore = create<AuthState>(set => {
     webuiDescription: initialState.webuiDescription,
 
     login: (token, isGuest = false, coreVersion = null, apiVersion = null, webuiTitle = null, webuiDescription = null) => {
-      localStorage.setItem('LIGHTRAG-API-TOKEN', token);
+      localStorage.setItem('RAG-YAMAN-API-TOKEN', token);
 
       if (coreVersion) {
-        localStorage.setItem('LIGHTRAG-CORE-VERSION', coreVersion);
+        localStorage.setItem('RAG-YAMAN-CORE-VERSION', coreVersion);
       }
       if (apiVersion) {
-        localStorage.setItem('LIGHTRAG-API-VERSION', apiVersion);
+        localStorage.setItem('RAG-YAMAN-API-VERSION', apiVersion);
       }
 
       if (webuiTitle) {
-        localStorage.setItem('LIGHTRAG-WEBUI-TITLE', webuiTitle);
+        localStorage.setItem('RAG-YAMAN-WEBUI-TITLE', webuiTitle);
       } else {
-        localStorage.removeItem('LIGHTRAG-WEBUI-TITLE');
+        localStorage.removeItem('RAG-YAMAN-WEBUI-TITLE');
       }
 
       if (webuiDescription) {
-        localStorage.setItem('LIGHTRAG-WEBUI-DESCRIPTION', webuiDescription);
+        localStorage.setItem('RAG-YAMAN-WEBUI-DESCRIPTION', webuiDescription);
       } else {
-        localStorage.removeItem('LIGHTRAG-WEBUI-DESCRIPTION');
+        localStorage.removeItem('RAG-YAMAN-WEBUI-DESCRIPTION');
       }
 
       const username = getUsernameFromToken(token);
@@ -217,12 +217,12 @@ export const useAuthStore = create<AuthState>(set => {
     },
 
     logout: () => {
-      localStorage.removeItem('LIGHTRAG-API-TOKEN');
+      localStorage.removeItem('RAG-YAMAN-API-TOKEN');
 
-      const coreVersion = localStorage.getItem('LIGHTRAG-CORE-VERSION');
-      const apiVersion = localStorage.getItem('LIGHTRAG-API-VERSION');
-      const webuiTitle = localStorage.getItem('LIGHTRAG-WEBUI-TITLE');
-      const webuiDescription = localStorage.getItem('LIGHTRAG-WEBUI-DESCRIPTION');
+      const coreVersion = localStorage.getItem('RAG-YAMAN-CORE-VERSION');
+      const apiVersion = localStorage.getItem('RAG-YAMAN-API-VERSION');
+      const webuiTitle = localStorage.getItem('RAG-YAMAN-WEBUI-TITLE');
+      const webuiDescription = localStorage.getItem('RAG-YAMAN-WEBUI-DESCRIPTION');
 
       set({
         isAuthenticated: false,
@@ -238,7 +238,7 @@ export const useAuthStore = create<AuthState>(set => {
     setVersion: (coreVersion, apiVersion) => {
       // Update localStorage
       if (coreVersion) {
-        localStorage.setItem('LIGHTRAG-CORE-VERSION', coreVersion);
+        localStorage.setItem('RAG-YAMAN-CORE-VERSION', coreVersion);
       }
       if (apiVersion) {
         localStorage.setItem('LIGHTRAG-API-VERSION', apiVersion);

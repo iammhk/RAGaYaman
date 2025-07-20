@@ -1,5 +1,5 @@
 """
-LightRAG FastAPI Server
+RAG-Yaman FastAPI Server
 """
 
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -155,8 +155,8 @@ def create_app(args):
 
     # Initialize FastAPI
     app_kwargs = {
-        "title": "LightRAG Server API",
-        "description": "Providing API for LightRAG core, Web UI and Ollama Model Emulation"
+        "title": "RAG-Yaman Server API",
+        "description": "Providing API for RAG-Yaman core, Web UI and Ollama Model Emulation"
         + "(With authentication)"
         if api_key
         else "",

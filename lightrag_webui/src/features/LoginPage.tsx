@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import { ZapIcon } from 'lucide-react'
+import { Music3Icon } from 'lucide-react'
 import AppSettings from '@/components/AppSettings'
 
 const LoginPage = () => {
@@ -96,7 +96,7 @@ const LoginPage = () => {
       const response = await loginToServer(username, password)
 
       // Get previous username from localStorage
-      const previousUsername = localStorage.getItem('LIGHTRAG-PREVIOUS-USER')
+      const previousUsername = localStorage.getItem('RAG-YAMAN-PREVIOUS-USER')
 
       // Check if it's the same user logging in again
       const isSameUser = previousUsername === username
@@ -111,7 +111,7 @@ const LoginPage = () => {
       }
 
       // Update previous username
-      localStorage.setItem('LIGHTRAG-PREVIOUS-USER', username)
+      localStorage.setItem('RAG-YAMAN-PREVIOUS-USER', username)
 
       // Check authentication mode
       const isGuestMode = response.auth_mode === 'disabled'
@@ -138,7 +138,7 @@ const LoginPage = () => {
       // Clear any existing auth state
       useAuthStore.getState().logout()
       // Clear local storage
-      localStorage.removeItem('LIGHTRAG-API-TOKEN')
+      localStorage.removeItem('RAG-YAMAN-API-TOKEN')
     } finally {
       setLoading(false)
     }
@@ -153,11 +153,11 @@ const LoginPage = () => {
         <CardHeader className="flex items-center justify-center space-y-2 pb-8 pt-6">
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center gap-3">
-              <img src="logo.svg" alt="LightRAG Logo" className="h-12 w-12" />
-              <ZapIcon className="size-10 text-emerald-400" aria-hidden="true" />
+              <img src="logo.svg" alt="RAG-Yaman Logo" className="h-12 w-12" />
+              <Music3Icon className="size-10 text-emerald-400" aria-hidden="true" />
             </div>
             <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">LightRAG</h1>
+              <h1 className="text-3xl font-bold tracking-tight">RAG-Yaman</h1>
               <p className="text-muted-foreground text-sm">
                 {t('login.description')}
               </p>

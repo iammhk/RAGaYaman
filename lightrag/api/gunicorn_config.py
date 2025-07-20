@@ -115,8 +115,8 @@ def on_starting(server):
     except ImportError:
         print("psutil not installed, skipping memory usage reporting")
 
-    # Log the location of the LightRAG log file
-    print(f"LightRAG log file: {log_file_path}\n")
+    # Log the location of the RAG-Yaman log file
+    print(f"RAG-Yaman log file: {log_file_path}\n")
 
     print("Gunicorn initialization complete, forking workers...\n")
 

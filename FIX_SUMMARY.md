@@ -1,7 +1,7 @@
-# LightRAG Vector Database IndexError Fix
+# RAG-Yaman Vector Database IndexError Fix
 
 ## Problem
-You encountered an IndexError when processing documents with LightRAG:
+You encountered an IndexError when processing documents with RAG-Yaman:
 ```
 IndexError: index 24 is out of bounds for axis 0 with size 0
 ```
