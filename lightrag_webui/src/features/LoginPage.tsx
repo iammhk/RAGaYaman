@@ -152,12 +152,15 @@ const LoginPage = () => {
       <Card className="w-full max-w-[480px] shadow-lg mx-4">
         <CardHeader className="flex items-center justify-center space-y-2 pb-8 pt-6">
           <div className="flex flex-col items-center space-y-4">
-            <div className="flex items-center gap-3">
-              <img src="logo.svg" alt="RAG-Yaman Logo" className="h-12 w-12" />
-              <Music3Icon className="size-10 text-emerald-400" aria-hidden="true" />
+            <div className="flex items-center gap-4">
+              <img src="logo.svg" alt="RAG-Yaman Logo" className="h-14 w-14" />
+              <span className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">RAGai</span>
             </div>
             <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">RAG-Yaman</h1>
+              <div className="flex items-center justify-center gap-2">
+                <Music3Icon className="size-8 text-emerald-400" aria-hidden="true" />
+                <h1 className="text-3xl font-bold tracking-tight">RAG-Yaman</h1>
+              </div>
               <p className="text-muted-foreground text-sm">
                 {t('login.description')}
               </p>
